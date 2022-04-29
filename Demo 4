@@ -1,0 +1,197 @@
+var createScene = function () {
+    // This creates a basic Babylon Scene object (non-mesh)
+    var scene = new BABYLON.Scene(engine);
+
+    // This creates and positions a free camera (non-mesh)
+    var camera = new BABYLON.ArcRotateCamera("camera1",-Math.PI / 2, 3 * Math.PI / 8, 5, new BABYLON.Vector3(0,0,0), scene);
+    camera.setTarget(new BABYLON.Vector3(0,0,0));
+    camera.attachControl(canvas, true);
+
+    var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(10, 10, 10), scene);
+    var light2 = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(-10, -10, -10), scene);
+    light.intensity = 10;
+    light2.intensity = 10;
+    
+   
+
+    var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
+    var myMaterial2 = new BABYLON.StandardMaterial("myMaterial2", scene);
+// specular color
+    myMaterial.diffuseColor = new BABYLON.Color3(0,1, 1);
+    myMaterial.specularColor = new BABYLON.Color3(0.75, 0, 0);
+    //myMaterial.diffuseColor = new BABYLON.Color3(0,1, 1);
+    myMaterial.hasAlpha = true;
+    myMaterial.needAlphaBlending(true);
+    myMaterial.needAlphaBlendingForMesh(true);
+    myMaterial.backFaceCulling = false;
+    myMaterial.alpha = 0.7;
+
+    var myMaterial2 = new BABYLON.StandardMaterial("myMaterial2", scene);
+    
+    myMaterial2.diffuseColor = new BABYLON.Color3(1,0, 0);
+    
+    myMaterial2.hasAlpha = true;
+    myMaterial2.needAlphaBlending(true);
+    myMaterial2.needAlphaBlendingForMesh(true);
+    myMaterial2.backFaceCulling = true;
+    myMaterial2.alpha = 0.5;
+
+    
+
+    var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    var panel = new BABYLON.GUI.StackPanel();
+    panel.width = "200px";
+    panel.isVertical = true;
+    panel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    panel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+    advancedTexture.addControl(panel);
+
+    var textBlock = new BABYLON.GUI.TextBlock();
+    textBlock.text = "Diffuse color:";
+    textBlock.color= "white";
+    textBlock.height = "30px";
+    panel.addControl(textBlock);  
+
+    var picker = new BABYLON.GUI.ColorPicker();
+    picker.value = myMaterial.diffuseColor;
+    picker.height = "150px";
+    picker.width = "150px";
+    picker.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    picker.onValueChangedObservable.add(function(value) { // value is a color3
+         myMaterial.diffuseColor.copyFrom(value);
+    });
+
+    panel.addControl(picker);
+    GUI(myMaterial,myMaterial2);
+    return scene;
+
+};
+function GUI(myMaterial,myMaterial2,scene){
+    var box = BABYLON.MeshBuilder.CreateBox("box", {size: 10, depth: 0.001}, scene);
+    var box2 = BABYLON.MeshBuilder.CreateBox("box2", {size: 5, depth: 0.001}, scene);
+    box.position.y = 1;
+    box2.position.z = 0.01;
+    box2.position.x= 5;
+    
+    var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter : 5}, scene);
+    var sphere2 = BABYLON.MeshBuilder.CreateSphere("sphere2", {diameter : 5}, scene);
+    sphere.position.x= -10;
+    sphere2.position.x = -9;
+    sphere2.position.z = 0.01;
+
+    var disc = BABYLON.MeshBuilder.CreateDisc("disc", {radius : 2});
+    var disc2 = BABYLON.MeshBuilder.CreateDisc("disc2", {radius : 2});
+    disc.position.x= 15;
+    disc2.position.x = 13;
+    disc2.position.z = 0.01;
+    var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    var grid = new BABYLON.GUI.Grid("grid");
+
+    grid.addColumnDefinition(220, true);
+    grid.addColumnDefinition(300, true);
+    grid.addColumnDefinition(300, true);
+
+    advancedTexture.addControl(grid);
+    var stack = new BABYLON.GUI.StackPanel("panel");
+    stack.left = "10px";
+    stack.isVertical = true;
+    stack.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+    stack.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    grid.addControl(stack, 0, 0);
+
+var addRadio = function(text, parent, val) 
+    {
+        var button = new BABYLON.GUI.RadioButton();
+        button.width = "35px";
+        button.height = "20px";
+        button.color = "white";
+        button.background = "green";
+        button.isChecked = val==0;
+        button.group = "g1";
+        button.paddingLeft = "15px";
+
+        var mesh = [[disc,disc2],[box,box2],[sphere,sphere2]];
+        button.onIsCheckedChangedObservable.add((state) => {
+            if (state) { 
+                mesh[val][0].material = myMaterial;
+                mesh[val][1].material = myMaterial2;
+            }
+        }); 
+
+        var header = BABYLON.GUI.Control.AddHeader(button, text, "250px", { isHorizontal: true, controlFirst: true });
+        header.height = "25px";
+        header.color = "white";
+        header.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+
+        parent.addControl(header);    
+    }
+
+    var header = new BABYLON.GUI.TextBlock();
+
+    header.text = "Select Shape";
+    header.width = "180px";
+    header.height = "25px";
+    header.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+    header.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    header.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+    header.color = "white";
+
+    stack.addControl(header); 
+
+    addRadio("Disc", stack, 0);
+    addRadio("Rectangle", stack,1);
+    addRadio("Sphere", stack, 2);
+
+    var stack2 = new BABYLON.GUI.StackPanel("panel");
+    stack2.left = "10px";
+    stack2.isVertical = true;
+    stack2.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+    stack2.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    grid.addControl(stack2, 0, 1);
+
+var addRadio = function(text, parent, val) 
+    {
+        var button = new BABYLON.GUI.RadioButton();
+        button.width = "35px";
+        button.height = "20px";
+        button.color = "white";
+        button.background = "green";
+        button.isChecked = val==0;
+        button.group = "g1";
+        button.paddingLeft = "15px";
+        var AlphaTypes = [BABYLON.Engine.ALPHA_COMBINE,BABYLON.Engine.ALPHA_ADD,BABYLON.Engine.ALPHA_MULTIPLY]; 
+        button.onIsCheckedChangedObservable.add((state) => {
+            if (state) { 
+                myMaterial2.alphamode = AlphaTypes[val];
+                myMaterial.alphamode = AlphaTypes[val];
+                
+            }
+        }); 
+
+        var header3 = BABYLON.GUI.Control.AddHeader(button, text, "250px", { isHorizontal: true, controlFirst: true });
+        header3.height = "25px";
+        header3.color = "white";
+        header3.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+
+        parent.addControl(header3);    
+    }
+
+    var header2 = new BABYLON.GUI.TextBlock();
+
+    header2.text = "Select Blend Mode";
+    header2.width = "180px";
+    header2.height = "25px";
+    header2.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+    header2.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    header2.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+    header2.color = "white";
+
+    stack2.addControl(header2); 
+
+    addRadio("Alpha combine", stack2, 0);
+    addRadio("Alpha add", stack2,1);
+    addRadio("Alpha Mltiply", stack2, 2);
+    
+}
